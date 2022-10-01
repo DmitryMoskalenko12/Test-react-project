@@ -14,7 +14,6 @@ const addNewPost = (e) =>{
    create(newPost)
    setPost({title: '', body: ''});
    
-
 }
 return(
   <form>
