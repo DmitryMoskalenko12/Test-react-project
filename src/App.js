@@ -8,18 +8,35 @@ import MyButton from './components/UI/button/MyButton';
 import { usePosts } from './hooks/usePosts';
 import PostService from './API/PostService';
 import Loader from './components/UI/Loader/Loader';
+import { useFetching } from './hooks/useFetching';
+import { getPageCount } from './utils/pages';
 
 function App() {
 const [posts, setPosts] = useState([])
 
 const [filter, setFilter] = useState({sort: '', query: ''});
 const [modal, setModal] = useState(false);
-const [isPostsLoading, setIsPostsLoading] = useState(false)
+const [totalPages, setTotalPages] = useState(0);
+const [limit, setLimit] = useState(10);
+const [page, setPage] = useState(1);
+
+const [fetching, isLoading, error] = useFetching(async () =>{
+  const response = await PostService.getAll(limit, page)
+  setPosts(response.data);
+  const totalCount = response.headers['x-total-count']
+  setTotalPages(getPageCount(totalCount, limit))
+});
 
 const sortedAndSearchedPosts = usePosts(posts, filter.sort, filter.query);
 
+let pagesArray = []
+
+for(let i = 0; i < totalPages; i++){
+  pagesArray.push(i + 1);
+}
+console.log(pagesArray)
   useEffect(() =>{
-   fetchPosts()
+   fetching()
   },[])
 
 /* Создание */
@@ -28,14 +45,7 @@ const createPost = (newPost) =>{
    setModal(false)
 }
 
-async function fetchPosts(){
-  setIsPostsLoading(true);
-    setTimeout(async ()=>{
-      const posts = await PostService.getAll()
-      setPosts(posts);
-      setIsPostsLoading(false)
-    }, 1000)
-}
+
 /* удаление */
 const removePost = (post) =>{
   setPosts(posts.filter(p => p.id !== post.id))
@@ -43,7 +53,7 @@ const removePost = (post) =>{
 
   return (
     <div className="App">
-      <button onClick ={fetchPosts}>Get Posts</button>
+      <button onClick ={fetching}>Get Posts</button>
        <MyButton style ={{marginTop: 30}} onClick ={() => setModal(true)}>
         Створити користувача
        </MyButton>
@@ -52,10 +62,12 @@ const removePost = (post) =>{
       </MyModal>
       <hr style={{margin: '15px 0'}} />
       <PostFilter filter = {filter} setFilter = {setFilter}/>
-      
-    <PostList remove = {removePost} posts = {sortedAndSearchedPosts} title = {'Список постів 1'}/>
+      {
+        error && <h1>`Виникла помилка ${error}`</h1>
+      }
+     
      {
-      isPostsLoading ? <div style ={{display: 'flex', justifyContent: 'center', marginTop: 50}}><Loader/></div>  : <PostList remove = {removePost} posts = {sortedAndSearchedPosts} title = {'Список постів 1'}/>
+      isLoading ? <div style ={{display: 'flex', justifyContent: 'center', marginTop: 50}}><Loader/></div>  : <PostList remove = {removePost} posts = {sortedAndSearchedPosts} title = {'Список постів 1'}/>
      }
        
      
