@@ -9,7 +9,8 @@ import { usePosts } from './hooks/usePosts';
 import PostService from './API/PostService';
 import Loader from './components/UI/Loader/Loader';
 import { useFetching } from './hooks/useFetching';
-import { getPageCount } from './utils/pages';
+import { getPageCount, getPagesArray } from './utils/pages';
+import Pagination from './components/UI/pagination/Pagination';
 
 function App() {
 const [posts, setPosts] = useState([])
@@ -29,15 +30,9 @@ const [fetching, isLoading, error] = useFetching(async () =>{
 
 const sortedAndSearchedPosts = usePosts(posts, filter.sort, filter.query);
 
-let pagesArray = []
-
-for(let i = 0; i < totalPages; i++){
-  pagesArray.push(i + 1);
-}
-console.log(pagesArray)
   useEffect(() =>{
    fetching()
-  },[])
+  },[page])
 
 /* Создание */
 const createPost = (newPost) =>{
@@ -49,6 +44,10 @@ const createPost = (newPost) =>{
 /* удаление */
 const removePost = (post) =>{
   setPosts(posts.filter(p => p.id !== post.id))
+}
+
+const changePage = (page) => {
+  setPage(page)
 }
 
   return (
@@ -69,7 +68,8 @@ const removePost = (post) =>{
      {
       isLoading ? <div style ={{display: 'flex', justifyContent: 'center', marginTop: 50}}><Loader/></div>  : <PostList remove = {removePost} posts = {sortedAndSearchedPosts} title = {'Список постів 1'}/>
      }
-       
+     
+     <Pagination page = {page} changePage = {changePage} totalPages = {totalPages}/>
      
     </div>
   )
